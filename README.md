@@ -4,53 +4,57 @@
 
 ## 🚀 Overview
 
-NutriServe AI is an AI-powered food intelligence platform designed to provide practical and domain-specific guidance across four interconnected areas:
+NutriServe AI is an AI-powered food intelligence platform that provides practical, domain-specific guidance across four interconnected areas:
 
 - 🥗 Nutrition
 - 🛡️ Food Safety
 - 🔬 Food Science
 - 🏨 Hospitality
 
-Instead of using a single generic chatbot, NutriServe AI uses an **AI Orchestrator Agent** that understands the user's question, identifies the most relevant domain, and dynamically routes the request to a specialized AI agent.
+Unlike a traditional single-agent chatbot, NutriServe AI uses an **AI Orchestrator Agent** to understand the user's question, identify the most relevant domain, and dynamically route the request to a specialized AI agent.
 
 ## 🧠 Multi-Agent Architecture
 
 ```text
-                    USER
-                      │
-                      ▼
-             🧠 ORCHESTRATOR AGENT
-                      │
-          Understands the request
-                      │
-                      ▼
-             Selects the best domain
-                      │
-       ┌──────────────┼──────────────┐
-       ▼              ▼              ▼
-   🥗 Nutrition   🛡️ Food Safety   🔬 Food Science
-       │              │              │
-       └──────────────┼──────────────┘
-                      │
-                      ▼
-              🏨 Hospitality
-                      │
-                      ▼
-               AI RESPONSE
-                      │
-                      ▼
-          Analysis + Recommendation
-                      │
-                      ▼
-                    USER
+                         USER
+                           │
+                           ▼
+                  🧠 ORCHESTRATOR AGENT
+                           │
+                  Understands the request
+                           │
+                           ▼
+                  Selects relevant domain
+                           │
+          ┌────────────────┼────────────────┐
+          ▼                ▼                ▼
+     🥗 Nutrition    🛡️ Food Safety    🔬 Food Science
+          │                │                │
+          └────────────────┼────────────────┘
+                           │
+                           ▼
+                    🏨 Hospitality
+                           │
+                           ▼
+                      AI RESPONSE
+                           │
+                           ▼
+              Analysis + Recommendation
+                           │
+                           ▼
+                         USER
 ```
 
 ## 🤖 AI Agents
 
 ### 🧠 Orchestrator Agent
-The central routing agent. It analyzes the complete meaning of a user's question and selects the most relevant specialist.
+
+The central routing agent of NutriServe AI.
+
+It analyzes the complete meaning and intent of a user's question and selects the most relevant specialist agent.
 
 ### 🥗 Nutrition Agent
+
 Focuses on:
 
 - Calories
@@ -58,11 +62,13 @@ Focuses on:
 - Carbohydrates
 - Fats
 - Vitamins and minerals
+- Nutrient composition
 - Portion sizes
-- Dietary composition
-- General nutrition guidance
+- Dietary patterns
+- General nutrition education
 
 ### 🛡️ Food Safety Agent
+
 Focuses on:
 
 - Food storage
@@ -76,6 +82,7 @@ Focuses on:
 - Spoilage risks
 
 ### 🔬 Food Science Agent
+
 Focuses on:
 
 - Food processing
@@ -87,8 +94,10 @@ Focuses on:
 - Food quality
 - Food technology
 - Natural antimicrobials
+- Physicochemical properties
 
 ### 🏨 Hospitality Agent
+
 Focuses on:
 
 - Restaurants
@@ -100,49 +109,72 @@ Focuses on:
 - Service quality
 - Operational efficiency
 - Staff workflow
+- Hospitality management
 
-## 🔀 Intelligent Routing
+## 🔀 Intelligent Agent Routing
 
-NutriServe AI does not simply select an agent based on individual keywords.
+NutriServe AI does not simply match individual keywords.
 
 The Orchestrator evaluates the **overall intent of the user's question** and selects the most relevant specialist.
 
-For example, a question containing nutrition, food safety, food science, and hospitality aspects may still be routed to one primary specialist based on the main concern.
+For example, a question can contain aspects of nutrition, food safety, food science, and hospitality. The Orchestrator determines which domain represents the primary concern and routes the request accordingly.
 
 ## 🧪 Example
 
-**User:**
+### User Question
 
 > I run a hotel restaurant and want to serve a new high-protein chicken and barley meal. How can I ensure the chicken is safely stored and prepared, estimate its nutritional value, and maintain good food quality and guest satisfaction?
 
-**Orchestrator Decision:**
+### Orchestrator Decision
 
 ```text
 Primary Domain: Food Safety
 Selected Agent: Food Safety Agent
 ```
 
-The Food Safety Agent then provides analysis and practical recommendations while considering the other aspects of the request.
+The selected specialist then provides:
+
+- AI analysis
+- Practical recommendation
+- Safety guidance
+
+This demonstrates dynamic routing based on the overall meaning of the request.
+
+## 🔄 How It Works
+
+1. The user enters a food-related question.
+2. The frontend sends the question to the backend API.
+3. The NutriServe AI Orchestrator analyzes the request.
+4. The Orchestrator selects the most relevant specialist agent.
+5. The selected specialist analyzes the question.
+6. The system generates an AI analysis.
+7. The system provides a practical recommendation.
+8. A safety note is included when relevant.
+9. The complete response is displayed on the frontend.
 
 ## ⚙️ Technology Stack
 
 ### Frontend
+
 - HTML5
 - CSS3
 - JavaScript
 
 ### Backend
+
 - Node.js
 - Express.js
 - CORS
 - dotenv
 
 ### AI
+
 - Groq API
 - OpenAI-compatible API client
 - `openai/gpt-oss-20b`
 
 ### Deployment
+
 - Netlify — Frontend
 - Railway — Backend
 
@@ -152,9 +184,6 @@ The Food Safety Agent then provides analysis and practical recommendations while
 NutriServe AI/
 │
 ├── assets/
-│
-├── css/
-├── js/
 │
 ├── server/
 │   ├── server.js
@@ -169,20 +198,7 @@ NutriServe AI/
 └── .gitignore
 ```
 
-> `.env` is excluded from GitHub and is used only for the private API key.
-
-## 🔄 How It Works
-
-1. User enters a food-related question.
-2. The frontend sends the question to the backend API.
-3. The NutriServe Orchestrator analyzes the request.
-4. The Orchestrator selects one specialist agent.
-5. The selected specialist analyzes the question.
-6. The system generates:
-   - AI Analysis
-   - Practical Recommendation
-   - Safety Note
-7. The response is displayed on the frontend.
+> The `.env` file contains private API credentials and is excluded from the public GitHub repository.
 
 ## 🌐 Live Demo
 
@@ -196,18 +212,31 @@ https://nutriserve-ai-production.up.railway.app/
 
 API credentials are stored using environment variables and are not included in the public repository.
 
-The frontend communicates with the backend API rather than exposing the AI API key in browser-side JavaScript.
+The frontend communicates with the backend API instead of exposing the AI API key in browser-side JavaScript.
 
 ## 🎯 Project Goal
 
-NutriServe AI demonstrates how an **AI-agent workflow can combine multiple food-related domains into one intelligent platform**.
+NutriServe AI demonstrates how an **AI-agent workflow can integrate multiple food-related domains into one intelligent platform**.
 
-The goal is to make food-related decision support more structured by allowing an orchestrator to determine which specialist perspective is most relevant to each request.
+The project aims to make food-related decision support more structured by allowing an orchestrator to determine which specialist perspective is most relevant to each request.
+
+## 🌟 Key Features
+
+- Multi-agent AI architecture
+- Intelligent domain routing
+- Nutrition analysis
+- Food safety assessment
+- Food science guidance
+- Hospitality recommendations
+- AI-generated recommendations
+- Safety-focused responses
+- Responsive web interface
+- Live cloud deployment
 
 ## 👩‍💻 Project
 
 **NutriServe AI**
 
-Developed as an AI-agent-based food intelligence platform integrating:
+An AI-agent-based food intelligence platform integrating:
 
 **Nutrition × Food Safety × Food Science × Hospitality**
