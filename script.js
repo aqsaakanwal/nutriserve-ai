@@ -1,414 +1,797 @@
-const API_URL = "http://127.0.0.1:3000/api/analyze";
+const API_URL = "https://nutriserve-ai-production.up.railway.app/api/analyze";
 
-const questionInput = document.getElementById("questionInput");
-const analyzeButton = document.getElementById("analyzeButton");
-const agentResult = document.getElementById("agentResult");
+document.addEventListener("DOMContentLoaded", () => {
 
-console.log("NutriServe AI frontend loaded successfully.");
-console.log("Backend API:", API_URL);
+    const questionInput = document.getElementById("questionInput");
+    const analyzeButton = document.getElementById("analyzeButton");
+    const agentResult = document.getElementById("agentResult");
+    const agentWorkflow = document.getElementById("agentWorkflow");
+
+    const exampleQuestions =
+        document.querySelectorAll(".example-question");
+
+    const quickQuestions =
+        document.querySelectorAll(".quick-question");
 
 
-const agentThemes = {
+    /*
+    ============================================================
+    AGENT CONFIGURATION
+    ============================================================
+    */
 
-    "Nutrition Agent": {
-        icon: "🥗",
-        label: "NUTRITION INTELLIGENCE",
-        color: "#16a34a",
-        background: "#f0fdf4",
-        border: "#bbf7d0"
-    },
+    const agentConfig = {
 
-    "Food Safety Agent": {
-        icon: "🛡️",
-        label: "FOOD SAFETY INTELLIGENCE",
-        color: "#2563eb",
-        background: "#eff6ff",
-        border: "#bfdbfe"
-    },
+        "Nutrition Agent": {
+            icon: "🥗",
+            className: "nutrition",
+            label: "Nutrition Agent",
+            title: "Nutrition Analysis",
+            description:
+                "Analyzing calories, nutrients, dietary composition, and practical nutrition considerations."
+        },
 
-    "Food Science Agent": {
-        icon: "🔬",
-        label: "FOOD SCIENCE INTELLIGENCE",
-        color: "#7c3aed",
-        background: "#f5f3ff",
-        border: "#ddd6fe"
-    },
+        "Food Safety Agent": {
+            icon: "🛡️",
+            className: "safety",
+            label: "Food Safety Agent",
+            title: "Food Safety Analysis",
+            description:
+                "Evaluating storage, contamination risks, temperature control, hygiene, and safe food handling."
+        },
 
-    "Hospitality Agent": {
-        icon: "🏨",
-        label: "HOSPITALITY INTELLIGENCE",
-        color: "#c2410c",
-        background: "#fff7ed",
-        border: "#fed7aa"
+        "Food Science Agent": {
+            icon: "🔬",
+            className: "science",
+            label: "Food Science Agent",
+            title: "Food Science Analysis",
+            description:
+                "Evaluating processing, formulation, food quality, shelf life, preservation, and product development."
+        },
+
+        "Hospitality Agent": {
+            icon: "🏨",
+            className: "hospitality",
+            label: "Hospitality Agent",
+            title: "Hospitality Analysis",
+            description:
+                "Evaluating foodservice operations, guest experience, kitchen workflow, and service quality."
+        }
+
+    };
+
+
+    /*
+    ============================================================
+    HELPER FUNCTIONS
+    ============================================================
+    */
+
+    function escapeHTML(value) {
+
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
-};
 
+    function formatText(value) {
 
-async function analyzeQuestion(question) {
+        if (!value) {
+            return "";
+        }
 
-    if (!question || question.trim() === "") {
-
-        alert("Please enter a question first.");
-
-        return;
+        return escapeHTML(value)
+            .replace(/\n\n/g, "<br><br>")
+            .replace(/\n/g, "<br>");
     }
 
-    const cleanQuestion = question.trim();
 
-    console.log("Question submitted:", cleanQuestion);
+    function getAgentConfig(agentName) {
 
-    if (analyzeButton) {
+        return agentConfig[agentName] || {
 
-        analyzeButton.disabled = true;
+            icon: "🤖",
+            className: "default",
+            label: agentName || "AI Specialist Agent",
+            title: "AI Analysis",
+            description:
+                "Analyzing your food-related question using NutriServe AI."
+        };
 
-        analyzeButton.innerHTML =
-            "🤖 AI Agents Analyzing...";
     }
 
-    if (agentResult) {
+
+    /*
+    ============================================================
+    WORKFLOW DISPLAY
+    ============================================================
+    */
+
+    function showWorkflow(agentName) {
+
+        if (!agentWorkflow) {
+            return;
+        }
+
+        const config = getAgentConfig(agentName);
+
+        agentWorkflow.innerHTML = `
+
+            <div class="workflow-step active">
+
+                <div class="workflow-icon">
+                    🧠
+                </div>
+
+                <div class="workflow-content">
+
+                    <span class="workflow-label">
+                        ORCHESTRATOR
+                    </span>
+
+                    <strong>
+                        NutriServe AI Orchestrator
+                    </strong>
+
+                    <p>
+                        Understanding your question and selecting the most relevant specialist.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="workflow-connector"></div>
+
+
+            <div class="workflow-step active">
+
+                <div class="workflow-icon">
+                    ${config.icon}
+                </div>
+
+                <div class="workflow-content">
+
+                    <span class="workflow-label">
+                        SPECIALIST AGENT
+                    </span>
+
+                    <strong>
+                        ${escapeHTML(config.label)}
+                    </strong>
+
+                    <p>
+                        ${escapeHTML(config.description)}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="workflow-connector"></div>
+
+
+            <div class="workflow-step active">
+
+                <div class="workflow-icon">
+                    ✨
+                </div>
+
+                <div class="workflow-content">
+
+                    <span class="workflow-label">
+                        AI RECOMMENDATION
+                    </span>
+
+                    <strong>
+                        Generating food intelligence
+                    </strong>
+
+                    <p>
+                        Preparing an evidence-based response and practical recommendation.
+                    </p>
+
+                </div>
+
+            </div>
+
+        `;
+
+        agentWorkflow.style.display = "block";
+    }
+
+
+    /*
+    ============================================================
+    LOADING STATE
+    ============================================================
+    */
+
+    function showLoading() {
+
+        if (!agentResult) {
+            return;
+        }
 
         agentResult.style.display = "block";
 
+        agentResult.className =
+            "agent-result loading-result";
+
         agentResult.innerHTML = `
+
             <div class="result-loading">
-                <div class="loading-spinner"></div>
 
-                <h3>
-                    NutriServe AI is analyzing your question...
-                </h3>
+                <div class="loading-orbit">
 
-                <p>
-                    Orchestrator Agent is selecting the most relevant specialist.
-                </p>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </div>
+
+                <div class="loading-text">
+
+                    <strong>
+                        NutriServe AI is thinking...
+                    </strong>
+
+                    <p>
+                        The orchestrator is selecting the best specialist agent.
+                    </p>
+
+                </div>
+
             </div>
+
         `;
     }
 
-    try {
 
-        console.log("Sending request to backend...");
+    /*
+    ============================================================
+    ERROR STATE
+    ============================================================
+    */
 
-        const response = await fetch(API_URL, {
+    function showError(message) {
 
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                question: cleanQuestion
-            })
-
-        });
-
-        console.log(
-            "Backend response status:",
-            response.status
-        );
-
-        const data = await response.json();
-
-        console.log(
-            "Backend response:",
-            data
-        );
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.error ||
-                "Backend request failed."
-            );
+        if (!agentResult) {
+            return;
         }
 
-        displayResult(data);
+        agentResult.style.display = "block";
 
-    } catch (error) {
+        agentResult.className =
+            "agent-result error-result";
 
-        console.error(
-            "NutriServe AI Error:",
-            error
-        );
+        agentResult.innerHTML = `
 
-        if (agentResult) {
+            <div class="result-error">
 
-            agentResult.style.display = "block";
+                <div class="error-icon">
+                    ⚠️
+                </div>
 
-            agentResult.innerHTML = `
-                <div class="result-error">
+                <div>
 
                     <h3>
-                        ⚠️ Something went wrong
+                        NutriServe AI could not complete the analysis
                     </h3>
 
                     <p>
-                        ${escapeHtml(error.message)}
+                        ${escapeHTML(message)}
                     </p>
+
+                    <small>
+                        Please try again in a moment.
+                    </small>
+
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    /*
+    ============================================================
+    RESULT DISPLAY
+    ============================================================
+    */
+
+    function displayResult(data) {
+
+        if (!agentResult) {
+            return;
+        }
+
+        const config =
+            getAgentConfig(data.agent);
+
+        agentResult.style.display = "block";
+
+        agentResult.className =
+            `agent-result ${config.className}-result`;
+
+        agentResult.innerHTML = `
+
+            <div class="result-header">
+
+                <div class="result-agent-icon">
+
+                    ${config.icon}
+
+                </div>
+
+                <div class="result-agent-info">
+
+                    <span class="result-eyebrow">
+
+                        SPECIALIST SELECTED
+
+                    </span>
+
+                    <h3>
+
+                        ${escapeHTML(data.agent || config.label)}
+
+                    </h3>
 
                     <p>
-                        Please make sure the NutriServe AI backend is running on port 3000.
+
+                        ${escapeHTML(data.domain || config.title)}
+
                     </p>
 
                 </div>
-            `;
-        }
 
-    } finally {
-
-        if (analyzeButton) {
-
-            analyzeButton.disabled = false;
-
-            analyzeButton.innerHTML =
-                "🤖 Analyze with AI Agents →";
-        }
-    }
-}
-
-
-function displayResult(data) {
-
-    if (!agentResult) {
-
-        console.error(
-            "agentResult element was not found."
-        );
-
-        return;
-    }
-
-    const domain =
-        data.domain || "AI Specialist";
-
-    const agent =
-        data.agent || "Specialist Agent";
-
-    const reason =
-        data.reason ||
-        "The AI Orchestrator selected this specialist based on your question.";
-
-    const analysis =
-        data.analysis ||
-        "No analysis was returned.";
-
-    const recommendation =
-        data.recommendation ||
-        "No recommendation was returned.";
-
-    const safetyNote =
-        data.safety_note ||
-        "";
-
-    const theme =
-        agentThemes[agent] ||
-        {
-            icon: "🤖",
-            label: "NUTRISERVE AI",
-            color: "#16845b",
-            background: "#f0fdf4",
-            border: "#bbf7d0"
-        };
-
-
-    agentResult.style.display = "block";
-
-
-    agentResult.innerHTML = `
-
-        <div
-            class="result-header"
-            style="
-                background:${theme.background};
-                border-bottom-color:${theme.border};
-            "
-        >
-
-            <div
-                class="result-agent-icon"
-                style="
-                    border-color:${theme.border};
-                "
-            >
-                ${theme.icon}
             </div>
 
-            <div>
 
-                <div
-                    class="result-label"
-                    style="color:${theme.color};"
-                >
-                    ${theme.label}
+            <div class="result-routing">
+
+                <div class="routing-item">
+
+                    <span>
+                        🎯
+                    </span>
+
+                    <div>
+
+                        <small>
+                            SELECTED DOMAIN
+                        </small>
+
+                        <strong>
+                            ${escapeHTML(data.domain || "Food Intelligence")}
+                        </strong>
+
+                    </div>
+
                 </div>
 
-                <h3>
-                    ${escapeHtml(agent)}
-                </h3>
+
+                <div class="routing-item">
+
+                    <span>
+                        🧠
+                    </span>
+
+                    <div>
+
+                        <small>
+                            AGENT
+                        </small>
+
+                        <strong>
+                            ${escapeHTML(data.agent || "Specialist Agent")}
+                        </strong>
+
+                    </div>
+
+                </div>
 
             </div>
 
-        </div>
+
+            <div class="result-reason">
+
+                <div class="result-section-icon">
+                    💡
+                </div>
+
+                <div>
+
+                    <h4>
+                        Why this agent?
+                    </h4>
+
+                    <p>
+                        ${formatText(data.reason)}
+                    </p>
+
+                </div>
+
+            </div>
 
 
-        <div
-            class="result-domain"
-            style="
-                color:${theme.color};
-                background:${theme.background};
-                border-color:${theme.border};
-            "
-        >
+            <div class="result-analysis">
 
-            <strong>Domain:</strong>
+                <div class="result-section-icon">
+                    🔎
+                </div>
 
-            ${escapeHtml(domain)}
+                <div>
 
-        </div>
+                    <h4>
+                        AI Analysis
+                    </h4>
 
+                    <p>
+                        ${formatText(data.analysis)}
+                    </p>
 
-        <div class="result-section">
+                </div>
 
-            <h4>
-                🧠 AI Analysis
-            </h4>
-
-            <p>
-                ${formatText(analysis)}
-            </p>
-
-        </div>
+            </div>
 
 
-        <div class="result-section">
+            <div class="result-recommendation">
 
-            <h4>
-                💡 Recommendation
-            </h4>
+                <div class="result-section-icon">
+                    ✨
+                </div>
 
-            <p>
-                ${formatText(recommendation)}
-            </p>
+                <div>
 
-        </div>
+                    <h4>
+                        Recommendation
+                    </h4>
+
+                    <p>
+                        ${formatText(data.recommendation)}
+                    </p>
+
+                </div>
+
+            </div>
 
 
-        ${
-            safetyNote
-                ? `
-                    <div class="result-section safety-section">
+            ${data.safety_note
+                ?
+                `
+                    <div class="result-safety">
 
-                        <h4>
-                            🛡️ Safety Note
-                        </h4>
+                        <div class="result-section-icon">
+                            🛡️
+                        </div>
 
-                        <p>
-                            ${formatText(safetyNote)}
-                        </p>
+                        <div>
+
+                            <h4>
+                                Safety Note
+                            </h4>
+
+                            <p>
+                                ${formatText(data.safety_note)}
+                            </p>
+
+                        </div>
 
                     </div>
                 `
-                : ""
+                :
+                ""
+            }
+
+        `;
+
+        agentResult.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest"
+        });
+
+    }
+
+
+    /*
+    ============================================================
+    MAIN AI ANALYSIS
+    ============================================================
+    */
+
+    async function analyzeQuestion() {
+
+        if (!questionInput || !analyzeButton) {
+            return;
+        }
+
+        const question =
+            questionInput.value.trim();
+
+        if (!question) {
+
+            questionInput.focus();
+
+            showError(
+                "Please enter a food-related question first."
+            );
+
+            return;
         }
 
 
-        <div
-            class="result-routing"
-            style="
-                border-left-color:${theme.color};
-                background:${theme.background};
-            "
-        >
+        analyzeButton.disabled = true;
 
-            <strong
-                style="color:${theme.color};"
-            >
-                Orchestrator Decision
-            </strong>
+        analyzeButton.classList.add("loading");
 
-            <p>
-                ${escapeHtml(reason)}
-            </p>
-
-        </div>
-
-    `;
+        analyzeButton.innerHTML = `
+            <span>🤖</span>
+            Analyzing...
+        `;
 
 
-    agentResult.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
+        showLoading();
 
 
-function formatText(text) {
+        try {
 
-    return escapeHtml(String(text))
-        .replace(/\n/g, "<br>");
-}
+            const response =
+                await fetch(API_URL, {
 
+                    method: "POST",
 
-function escapeHtml(text) {
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-    const div = document.createElement("div");
+                    body: JSON.stringify({
+                        question: question
+                    })
 
-    div.textContent = text;
-
-    return div.innerHTML;
-}
-
-
-function setQuestion(question) {
-
-    if (!questionInput) {
-
-        console.error(
-            "questionInput element was not found."
-        );
-
-        return;
-    }
-
-    questionInput.value = question;
-
-    questionInput.focus();
-
-    questionInput.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
-}
+                });
 
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+            let data;
 
-        console.log(
-            "NutriServe AI DOM ready."
-        );
+            try {
+
+                data = await response.json();
+
+            } catch (jsonError) {
+
+                throw new Error(
+                    "The AI server returned an invalid response."
+                );
+
+            }
 
 
-        const quickQuestions =
-            document.querySelectorAll(
-                ".quick-question, .example-question"
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error ||
+                    "The AI server could not process the request."
+                );
+
+            }
+
+
+            if (!data.agent) {
+
+                throw new Error(
+                    "No specialist agent was returned by the AI."
+                );
+
+            }
+
+
+            showWorkflow(data.agent);
+
+            displayResult(data);
+
+
+        } catch (error) {
+
+            console.error(
+                "NutriServe AI Error:",
+                error
             );
 
+            showError(
+                error.message ||
+                "Unable to connect to NutriServe AI."
+            );
 
-        quickQuestions.forEach(
-            function (button) {
+        } finally {
 
-                button.addEventListener(
+            analyzeButton.disabled = false;
+
+            analyzeButton.classList.remove("loading");
+
+            analyzeButton.innerHTML = `
+                🤖 Analyze with AI Agents →
+            `;
+
+        }
+
+    }
+
+
+    /*
+    ============================================================
+    ANALYZE BUTTON
+    ============================================================
+    */
+
+    if (analyzeButton) {
+
+        analyzeButton.addEventListener(
+            "click",
+            analyzeQuestion
+        );
+
+    }
+
+
+    /*
+    ============================================================
+    ENTER KEY SUPPORT
+    ============================================================
+    */
+
+    if (questionInput) {
+
+        questionInput.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (
+                    event.key === "Enter" &&
+                    (event.ctrlKey || event.metaKey)
+                ) {
+
+                    event.preventDefault();
+
+                    analyzeQuestion();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /*
+    ============================================================
+    EXAMPLE QUESTIONS
+    ============================================================
+    */
+
+    exampleQuestions.forEach(
+        (button) => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const question =
+                        button.dataset.question ||
+                        button.textContent.trim();
+
+                    if (questionInput) {
+
+                        questionInput.value =
+                            question;
+
+                        questionInput.focus();
+
+                        questionInput.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center"
+                        });
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+    /*
+    ============================================================
+    QUICK QUESTIONS
+    ============================================================
+    */
+
+    quickQuestions.forEach(
+        (button) => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const question =
+                        button.dataset.question ||
+                        button.textContent.trim();
+
+                    if (questionInput) {
+
+                        questionInput.value =
+                            question;
+
+                        questionInput.focus();
+
+                        questionInput.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center"
+                        });
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+    /*
+    ============================================================
+    SMOOTH NAVIGATION
+    ============================================================
+    */
+
+    document
+        .querySelectorAll('a[href^="#"]')
+        .forEach(
+            (link) => {
+
+                link.addEventListener(
                     "click",
-                    function () {
+                    (event) => {
 
-                        const question =
-                            button.dataset.question ||
-                            button.textContent.trim();
+                        const targetId =
+                            link.getAttribute("href");
 
-                        setQuestion(question);
+                        if (
+                            !targetId ||
+                            targetId === "#"
+                        ) {
+                            return;
+                        }
+
+                        const target =
+                            document.querySelector(
+                                targetId
+                            );
+
+                        if (target) {
+
+                            event.preventDefault();
+
+                            target.scrollIntoView({
+                                behavior: "smooth",
+                                block: "start"
+                            });
+
+                        }
+
                     }
                 );
 
@@ -416,50 +799,58 @@ document.addEventListener(
         );
 
 
-        if (analyzeButton) {
+    /*
+    ============================================================
+    NAVBAR SCROLL EFFECT
+    ============================================================
+    */
 
-            analyzeButton.addEventListener(
-                "click",
-                function () {
+    const navbar =
+        document.querySelector(".navbar");
 
-                    analyzeQuestion(
-                        questionInput.value
+    if (navbar) {
+
+        window.addEventListener(
+            "scroll",
+            () => {
+
+                if (window.scrollY > 30) {
+
+                    navbar.classList.add(
+                        "scrolled"
+                    );
+
+                } else {
+
+                    navbar.classList.remove(
+                        "scrolled"
                     );
 
                 }
-            );
 
-        } else {
-
-            console.error(
-                "Analyze button not found."
-            );
-        }
-
-
-        if (questionInput) {
-
-            questionInput.addEventListener(
-                "keydown",
-                function (event) {
-
-                    if (
-                        event.key === "Enter" &&
-                        (event.ctrlKey || event.metaKey)
-                    ) {
-
-                        event.preventDefault();
-
-                        analyzeQuestion(
-                            questionInput.value
-                        );
-
-                    }
-
-                }
-            );
-
-        }
+            },
+            { passive: true }
+        );
 
     }
-);
+
+
+    /*
+    ============================================================
+    INITIAL STATE
+    ============================================================
+    */
+
+    if (agentWorkflow) {
+
+        agentWorkflow.style.display = "none";
+
+    }
+
+    if (agentResult) {
+
+        agentResult.style.display = "none";
+
+    }
+
+});
